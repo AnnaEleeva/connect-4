@@ -1,21 +1,37 @@
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import '../Game.css'
 import GameCircle from "./GameCircle";
 import Header from "./Header";
 import Footer from "./Footer";
-
-const NO_CIRCLES = 16;
-const NO_PLAYER = 0;
-const PLAYER_1 = 1;
-const PLAYER_2 = 2;
+import {isDraw, isWinner} from "../helper";
+import {
+    GAME_STATE_DRAW,
+    GAME_STATE_PLAYING,
+    GAME_STATE_WIN,
+    NO_CIRCLES,
+    NO_PLAYER,
+    PLAYER_1,
+    PLAYER_2
+} from "./Constants";
 
 const GameBoard = () => {
-    const [gameBoard, setGameBoard] = useState(Array(16).fill(0));
+    const [gameBoard, setGameBoard] = useState(Array(16).fill(NO_PLAYER));
     const [currentPlayer, setCurrentPlayer] = useState(PLAYER_1);
+    const [gameState, setGameState] = useState(GAME_STATE_PLAYING);
+    const [winPlayer, setWinPlayer] = useState(NO_PLAYER);
+
+    useEffect(() => {
+        initGame()
+    }, []);
+    const initGame = () => {
+        console.log('init game')
+        setGameBoard(Array(16).fill(NO_PLAYER));
+        setCurrentPlayer(PLAYER_1)
+    }
 
     const initBoard = () => {
         const circles = [];
-        for (let i = 0; i < NO_CIRCLES; i++){
+        for (let i = 0; i < NO_CIRCLES; i++) {
             circles.push(renderCircle(i));
         }
         return circles;
@@ -23,9 +39,18 @@ const GameBoard = () => {
     const circleClicked = (id) => {
         console.log('circle clicked:' + id);
 
-        // const board = [...gameBoard];
-        // board[id] = 1;
-        // setGameBoard(board)
+        if(gameBoard[id] !== NO_PLAYER) return;
+        if(gameState !== GAME_STATE_PLAYING) return;;
+
+        if (isWinner(gameBoard, id, currentPlayer)) {
+            setGameState(GAME_STATE_WIN)
+            setWinPlayer(currentPlayer)
+        }
+
+        if (isDraw(gameBoard, id, currentPlayer)) {
+            setGameState(GAME_STATE_DRAW)
+            setWinPlayer(NO_PLAYER)
+        }
 
         setGameBoard(prev => {
             return prev.map((circle, pos) => {
@@ -33,9 +58,6 @@ const GameBoard = () => {
                 return circle;
             })
         })
-
-        // gameBoard[id] = currentPlayer;
-        // setGameBoard(gameBoard);
 
         setCurrentPlayer(currentPlayer === PLAYER_1 ? PLAYER_2 : PLAYER_1)
 
@@ -48,11 +70,9 @@ const GameBoard = () => {
 
     return (
         <>
-            <Header/>
-            <div className="gameBoard">
-                {initBoard()}
-            </div>
-            <Footer/>
+            <Header gameState={gameState} currentPlayer={currentPlayer} winPlayer={winPlayer}/>
+            <div className="gameBoard">{initBoard()}</div>
+            <Footer onClickEvent={initGame}/>
         </>
     )
 }
