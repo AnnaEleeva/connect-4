@@ -3,7 +3,7 @@ import '../Game.css'
 import GameCircle from "./GameCircle";
 import Header from "./Header";
 import Footer from "./Footer";
-import {isDraw, isWinner} from "../helper";
+import {isDraw, isWinner, getComputerMove} from "../helper";
 import {
     GAME_STATE_DRAW,
     GAME_STATE_PLAYING,
@@ -15,7 +15,7 @@ import {
 } from "./Constants";
 
 const GameBoard = () => {
-    const [gameBoard, setGameBoard] = useState(Array(16).fill(NO_PLAYER));
+    const [gameBoard, setGameBoard] = useState(Array(NO_CIRCLES).fill(NO_PLAYER));
     const [currentPlayer, setCurrentPlayer] = useState(PLAYER_1);
     const [gameState, setGameState] = useState(GAME_STATE_PLAYING);
     const [winPlayer, setWinPlayer] = useState(NO_PLAYER);
@@ -25,8 +25,9 @@ const GameBoard = () => {
     }, []);
     const initGame = () => {
         console.log('init game')
-        setGameBoard(Array(16).fill(NO_PLAYER));
+        setGameBoard(Array(NO_CIRCLES).fill(NO_PLAYER));
         setCurrentPlayer(PLAYER_1)
+        setGameState(GAME_STATE_PLAYING)
     }
 
     const initBoard = () => {
@@ -36,11 +37,17 @@ const GameBoard = () => {
         }
         return circles;
     }
+
+    const suggestMove = () => {
+       circleClicked(getComputerMove(gameBoard));
+    }
+
     const circleClicked = (id) => {
         console.log('circle clicked:' + id);
 
-        if(gameBoard[id] !== NO_PLAYER) return;
-        if(gameState !== GAME_STATE_PLAYING) return;;
+        if (gameBoard[id] !== NO_PLAYER) return;
+        if (gameState !== GAME_STATE_PLAYING) return;
+
 
         if (isWinner(gameBoard, id, currentPlayer)) {
             setGameState(GAME_STATE_WIN)
@@ -67,12 +74,16 @@ const GameBoard = () => {
         return <GameCircle key={id} id={id} className={`player_${gameBoard[id]}`} onCircleClicked={circleClicked}/>
     }
 
+    const onNewGameClick = () => {
+        initGame();
+    }
+
 
     return (
         <>
             <Header gameState={gameState} currentPlayer={currentPlayer} winPlayer={winPlayer}/>
             <div className="gameBoard">{initBoard()}</div>
-            <Footer onClickEvent={initGame}/>
+            <Footer onSuggestClick={suggestMove} onNewGameClick={onNewGameClick} gameState={gameState} />
         </>
     )
 }
